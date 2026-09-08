@@ -1,0 +1,40 @@
+{
+  "schema_version": 2,
+  "record_type": "manual",
+  "timestamp": "2026-09-08T16:11:16+08:00",
+  "date": "2026-09-08",
+  "week": "2026-W37",
+  "server": {
+    "id": "ansys-airway",
+    "name": "1b75ea75021f"
+  },
+  "project": {
+    "id": "manual-work",
+    "name": "非代码工作",
+    "category": "周报/日志配置"
+  },
+  "summary": "配置了 weekly-work-report 工作日志技能（多服务器 + 中心 Git 存储），并查看/规划了气道 STL/CFD 封盖管线方向。",
+  "completed": [
+    "安装并初始化 weekly-work-report 技能，选择多服务器汇总 + 中心 Git 存储，配置 server-id=ansys-airway 与私有日志仓库 work-report.git。",
+    "查看/规划 NIfTI->STL 的 SDF+模糊+Taubin 管线与 airway_cfd 封盖管线后续改进方向（未落地新代码/结果）。"
+  ],
+  "results": [],
+  "problems": [
+    {
+      "problem": "当前工作站 /workspace/Airway_STL 不是 Git 仓库，无法作为 project 注册到工作日志，只能以手动/非代码形式记录。",
+      "resolution": "按 SKILL.md 以 manual 记录类型保存，日志归属通用工程/实验分类。",
+      "status": "resolved"
+    }
+  ],
+  "next_steps": [
+    "在 SDF/封盖管线的规划基础上落地具体改进（断支网格级补桥/膨胀保护等）。",
+    "视需要补充中心 Git 日志仓库的后续同步与多机使用。"
+  ],
+  "tags": [
+    "周报技能",
+    "工作日志",
+    "气道STL",
+    "封盖管线"
+  ],
+  "evidence": {}
+}
