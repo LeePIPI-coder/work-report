@@ -1,0 +1,184 @@
+{
+  "schema_version": 2,
+  "record_type": "daily",
+  "timestamp": "2026-09-11T09:50:48+00:00",
+  "date": "2026-09-11",
+  "week": "2026-W37",
+  "server": {
+    "id": "mucus-yolo",
+    "name": "Mucus_yolo"
+  },
+  "project": {
+    "id": "mucus-yolo",
+    "name": "Mucus_yolo 肺黏液/血管分析",
+    "category": "医学影像 AI"
+  },
+  "summary": "汇总二阶段分类全部模型结果并产出报告；完成 round2 患者级五折几何对比（阶段一）与 A/B/C/D 配对消融五折（阶段二）；通过 OOF 与数据质量分析推翻了此前基于 3 位患者固定划分的两个核心结论，定位到标签不自洽是性能天花板主因",
+  "completed": [
+    "汇总 experiments/ 下 24 个实验目录的二阶段分类结果，数值全部从各实验目录现场重算，产出《二阶段分类模型结果汇总_第一二次数据集_20260911.md》；修正旧报告一处统计口径错误（oriented 五折折间标准差误用总体标准差 0.0638，正确为样本标准差 0.0714）",
+    "核实第一次数据集 8 组五折实验的真实增强设置：除 v3_legacy 外其余 7 组均为 conservative；确认 v3/v4 单次划分实验的 run_config 中不存在 augmentation 字段，其增强差异无法验证",
+    "完成阶段一：round2 患者级五折几何对比，4 个几何（cube64/cube32/oriented48x48x64/oriented32x32x48）× 5 折 = 20 次训练，新建共用患者划分，四个几何样本集逐条校验一致",
+    "完成阶段二：A/B/C/D 训练数据组成配对消融 × 5 折 = 20 次训练，候选患者复用阶段一折划分，使两阶段结果可直接比较",
+    "推翻旧结论一：加入第二次人工标注的收益消失。固定划分 3 种子为 AUPRC +0.0871（3/3 种子提高），17 位患者 OOF 上降为 +0.0022，95%CI [-0.0578, +0.0603]，逐折仅 2/5 提高、逐患者 10/17 提高",
+    "推翻旧结论二：粘液栓掩码并非有害。固定划分下候选 AUPRC 由 0.3575 降至 0.2145，OOF 上 C−A 为 +0.0268、D−B 为 +0.0293，点估计由负转正且均跨 0；掩码召回 0.738/0.788 在两阶段稳定复现",
+    "推翻旧结论三：几何排序。固定划分下 cube32 居第二（0.3270）且 oriented32 第一（0.3899），OOF 上 cube32 降至垫底（0.2198）、oriented48 升至第一（0.2623）",
+    "定位性能天花板主因：患者内标签在 10mm 尺度不自洽。17 位患者中 14 位的阳性候选 10mm 内存在阴性候选，E0001184 最近对立距离仅 2.84mm，而 patch 为 32x32x48mm（1mm 间距），重叠约 84%",
+    "发现跨轮次标签定义漂移：同为两轮都标注的患者 E0001066 阳性率由 26.4% 降至 14.9%；39% 的 round1 候选其最近的 round2 候选标签相反；round2 候选全部来自模型检测（中位置信度 0.669），round1 无任何置信度字段",
+    "识别出反直觉证据：A 组每折 8 位训练患者、B 组 13-15 位，训练患者近乎翻倍但性能无提升，同时 A 组 fold0 训练损失 0.694→0.52、验证损失 0.687→0.74 明显过拟合，说明新增患者未提供可迁移信息"
+  ],
+  "results": [
+    {
+      "name": "二阶段分类结果汇总报告",
+      "value": "1",
+      "unit": "份",
+      "context": "reports/二阶段分类模型结果汇总_第一二次数据集_20260911.md，覆盖 24 个实验目录"
+    },
+    {
+      "name": "阶段一 OOF 折均 AUPRC（oriented48x48x64 / oriented32x32x48 / cube64 / cube32）",
+      "value": "0.2623 / 0.2495 / 0.2412 / 0.2198",
+      "unit": "AUPRC",
+      "context": "17 位患者、1757 候选、best-val-AUPRC、5 折"
+    },
+    {
+      "name": "阶段一 几何配对 bootstrap（均 vs cube64）",
+      "value": "全部 95%CI 跨 0",
+      "unit": "-",
+      "context": "oriented32−cube64 AUPRC +0.0188 [-0.0368,+0.0748]；17 位患者聚类 5000 次"
+    },
+    {
+      "name": "阶段二 OOF 折均 AUPRC（A/B/C/D）",
+      "value": "0.2584 / 0.2499 / 0.2750 / 0.2757",
+      "unit": "AUPRC",
+      "context": "A 第一次人工、B 第一+第二人工、C 第一次人工+掩码、D 第一+第二+掩码"
+    },
+    {
+      "name": "第二次标注净效应 B−A",
+      "value": "+0.0022",
+      "unit": "AUPRC",
+      "context": "95%CI [-0.0578,+0.0603]，P(Δ>0)=0.560；对比固定划分 3 种子的 +0.0871"
+    },
+    {
+      "name": "掩码效应 C−A / D−B",
+      "value": "+0.0268 / +0.0293",
+      "unit": "AUPRC",
+      "context": "95%CI 分别为 [-0.0288,+0.0815] 与 [-0.0396,+0.0979]，点估计由负转正"
+    },
+    {
+      "name": "掩码召回@0.5（C / D）",
+      "value": "0.738 / 0.788",
+      "unit": "recall",
+      "context": "两阶段稳定复现，为唯一互相印证的结论"
+    },
+    {
+      "name": "患者内阳性-阴性最近距离 <10mm 的患者数",
+      "value": "14",
+      "unit": "位 / 17 位",
+      "context": "E0001184 最近 2.84mm、E0001066 4.31mm、E0001163 4.45mm、E0001009 4.63mm"
+    },
+    {
+      "name": "跨轮次标签相反比例",
+      "value": "39.0%",
+      "unit": "-",
+      "context": "E0001066 与 E0001163 两位两轮均标注患者的 205 个 round1 候选"
+    },
+    {
+      "name": "模型阳性/阴性中位预测概率差",
+      "value": "0.05",
+      "unit": "probability",
+      "context": "B 组 OOF，round1 阳性 0.4885 vs 阴性 0.4419；全局 AUROC 0.6053、患者内 AUROC 0.5829"
+    },
+    {
+      "name": "本轮新增训练任务",
+      "value": "40",
+      "unit": "次训练",
+      "context": "阶段一 20 次 + 阶段二 20 次，GPU 单卡 2 路并行"
+    }
+  ],
+  "problems": [
+    {
+      "problem": "掩码阳性样本在 5 折间分配严重失衡，fold 负载为 [177,147,18,177,0]，fold 4 无任何掩码验证样本",
+      "resolution": "定位为贪心目标函数缺陷——使用 |load+count−target| 会持续选中已接近目标的折。改为平方偏差和作为目标函数后负载变为 [104,104,104,104,103]",
+      "status": "resolved"
+    },
+    {
+      "problem": "训练器报错 'train_metadata.csv contains another partition'，A/B/C/D 全部折无法启动",
+      "resolution": "折构建脚本直接复用了源 metadata 的 partition/split 列，值仍为源划分。补上 train/val_candidate/val_mask 的显式赋值后通过",
+      "status": "resolved"
+    },
+    {
+      "problem": "build_round2_paired5fold.py 报 'numpy.ndarray' object is not callable",
+      "resolution": "mask_counts.values() 与 pandas Series 的 .values 属性冲突，改用 mask_counts.sum()",
+      "status": "resolved"
+    },
+    {
+      "problem": "run_round2_patient5fold.py 冒烟测试的任务构造逻辑写错，字典推导重建 jobs 后被重复覆盖",
+      "resolution": "改为显式传参构造 job 元组，冒烟测试通过后才启动正式任务",
+      "status": "resolved"
+    },
+    {
+      "problem": "误判阶段二训练进程卡死：进程处于 D 状态、CPU 时间仅 3 秒、训练日志无输出",
+      "resolution": "实测每 epoch 15.8 秒与阶段一一致，D 状态为进程退出前在共享宿主机 I/O 上的正常收尾滞留（约 2 分钟）。GPU 内存增长来自宿主机其他租户的 23.8GB 进程，非本任务异常",
+      "status": "resolved"
+    },
+    {
+      "problem": "此前基于 3 位患者固定划分得出的两个核心结论（第二次标注 +0.0871、掩码有害）在 17 位患者 OOF 上均不成立",
+      "resolution": "确认旧结论由单患者 E0001184 主导（该患者在 A 组基线 0.1235、B 组 0.2444）。建议将固定划分结果降级为探索性观察，以 OOF 为主口径",
+      "status": "resolved"
+    },
+    {
+      "problem": "现有证据不足以判定第二次标注是否有效：B−A 的 95%CI 宽度约 ±0.06，与待检效应量同量级",
+      "resolution": "明确该结论为'证据不足'而非'无效应'。若真实效应为 0.05 量级，需增加患者数而非增加随机种子",
+      "status": "unresolved"
+    }
+  ],
+  "next_steps": [
+    "将阶段一、阶段二 OOF 结果写入二阶段分类汇总报告，并把固定划分结论降级为探索性观察，避免报告中并存互相矛盾的结论",
+    "产出数据质量分析文档（标签 10mm 尺度不自洽、跨轮次定义漂移、168 条不确定样本被丢弃），提交标注团队而非仅作模型报告",
+    "补充第一次数据集与 round2 划分口径对齐的 OOF 对照（当前 A 组仅 690 样本的 round2 划分版本）",
+    "评估任务粒度调整：对 10mm 内标签相反的候选做仲裁复核，或从候选级二分类改为病灶级（先聚类再分类）",
+    "评估降低 patch 视野以缓解同一病灶内阳性/阴性候选混淆"
+  ],
+  "tags": [
+    "二阶段分类",
+    "五折交叉验证",
+    "配对消融",
+    "标签质量",
+    "OOF"
+  ],
+  "evidence": {
+    "commit_count": 0,
+    "commits": [],
+    "changed_files": [],
+    "working_tree_files": [
+      "D_resnet_class/obb_dataset.py",
+      "3D_resnet_class/train_obb_classifier.py",
+      "3D_resnet_class/build_paired_expansion_experiment.py",
+      "3D_resnet_class/build_round2_paired5fold.py",
+      "3D_resnet_class/build_round2_patient5fold.py",
+      "3D_resnet_class/datasets/",
+      "\"3D_resnet_class/reports/\\344\\272\\214\\351\\230\\266\\346\\256\\265\\345\\210\\206\\347\\261\\273_\\345\\267\\245\\344\\275\\234\\350\\256\\260\\345\\275\\225_20260911.md\"",
+      "\"3D_resnet_class/reports/\\344\\272\\214\\351\\230\\266\\346\\256\\265\\345\\210\\206\\347\\261\\273\\346\\250\\241\\345\\236\\213\\347\\273\\223\\346\\236\\234\\346\\261\\207\\346\\200\\273_\\347\\254\\254\\344\\270\\200\\344\\272\\214\\346\\254\\241\\346\\225\\260\\346\\215\\256\\351\\233\\206_20260911.md\"",
+      "\"3D_resnet_class/reports/\\347\\254\\254\\344\\270\\200\\344\\272\\214\\346\\254\\241\\346\\240\\207\\346\\263\\250\\346\\225\\260\\346\\215\\256\\346\\250\\241\\345\\236\\213\\347\\273\\223\\346\\236\\234\\346\\261\\207\\346\\200\\273_20260911.md\"",
+      "3D_resnet_class/round2_cube32_runner.log",
+      "3D_resnet_class/round2_oriented32x32x48_runner.log",
+      "3D_resnet_class/round2_paired5fold_runner.log",
+      "3D_resnet_class/round2_patient5fold_runner.log",
+      "3D_resnet_class/run_paired_expansion_experiment.py",
+      "3D_resnet_class/run_round2_cube32.py",
+      "3D_resnet_class/run_round2_fourway.py",
+      "3D_resnet_class/run_round2_oriented32x32x48.py",
+      "3D_resnet_class/run_round2_paired5fold.py",
+      "3D_resnet_class/run_round2_patient5fold.py",
+      "3D_resnet_class/summarize_paired_expansion_experiment.py",
+      "3D_resnet_class/summarize_round2_fourway.py",
+      "3D_resnet_class/summarize_round2_paired5fold.py",
+      "3D_resnet_class/summarize_round2_patient5fold.py"
+    ],
+    "unstaged_diff_stat": [
+      "3D_resnet_class/obb_dataset.py          | 16 +++++++++-",
+      " 3D_resnet_class/train_obb_classifier.py | 54 ++++++++++++++++++++++++++-------",
+      " 2 files changed, 58 insertions(+), 12 deletions(-)"
+    ],
+    "staged_diff_stat": []
+  }
+}
